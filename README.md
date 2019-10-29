@@ -10,10 +10,24 @@ I got tired of having to log in _every single time_ I wanted to check my schedul
 
 Oh, and it `alert`s you after 15 minutes because you're logged out, which tends to steal focus on Firefox for Android.
 
+## Running this and stuff
+
+This currently uses WSGI as I'm hosting it on a shared server using _Phusion Passenger_.
+Currently this requires you to put your username and password in the config.json file.
+
+To run this locally, I use `uwsgi`:
+
+```
+pip install -r requirements.txt
+cd public_python
+uwsgi --wsgi-file passenger_wsgi.py --http :8000
+```
+I recommend setting up a virtualenv for this.
+
 ## Other stuff
 
 I have absolutely no connection to NS Solutions or CampusSquare, other than having to use it at my university.
 
 ## Other things you may want to take a look at
 
-There's a client called _Twin:te_ by [HikaruEgashira](https://github.com/HikaruEgashira/twinte_frontend) which I found while making this, however this is not based on it.
+There's a client called [_Twin:te_](https://github.com/HikaruEgashira/twinte_frontend) by Github user @HikaruEgashira which I found while making this, however this is not based on it.
