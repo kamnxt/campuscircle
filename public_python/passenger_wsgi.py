@@ -6,6 +6,7 @@ try:
     with open("config.json") as configfile:
         CONFIG = json.load(configfile)
 except IOError:
+    print("IO error!")
     CONFIG = {}
 
 try:
