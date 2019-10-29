@@ -56,20 +56,6 @@ def get_calendar(username, password):
 #        out.write(res.text)
 
     return parse_full_calendar(res.html)
-    res = session.get(
-        "https://scs.cl.sophia.ac.jp/campusweb/campusportal.do", params={"page": "main"}
-    )
-    todays_stuff = [
-        line.strip()
-        for line in res.html.find("ul.mysch-portlet-list", first=True).text.split("\n")
-        if line
-    ]
-    todays_stuff = [line for line in todays_stuff if line]
-
-    if len(todays_stuff) == 1 and todays_stuff[0] == "no schedule.":
-        return []
-
-    return [ClassEntry(line) for line in todays_stuff]
 
 
 def show_page(calendar_items):
