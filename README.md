@@ -20,7 +20,7 @@ To run this locally, I use `uwsgi`:
 ```
 pip install -r requirements.txt
 cd public_python
-uwsgi --wsgi-file passenger_wsgi.py --http :8000
+uwsgi --yaml config.yaml:app
 ```
 I recommend setting up a virtualenv for this.
 
