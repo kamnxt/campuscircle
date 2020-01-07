@@ -1,0 +1,167 @@
+* {
+    /* Reset margins and stuff */
+    margin: 0;
+}
+
+html {
+    font-family: sans-serif;
+    background: #4b4b4b;
+    color: #d9d9d9;
+    scroll-behavior: smooth;
+}
+
+div, p {
+    text-transform: lowercase;
+}
+
+.date {
+    font-size: 2em;
+    position: sticky; /* scrolling satisfaction *= 1000 */
+    top:0;
+    box-shadow: 0 0.2rem 0.1rem 0rem #4b4b4b; /* make the elements below fade a bit instead of hard clipping */
+}
+
+.day p {
+    flex-grow: 0;
+    order:0;
+}
+
+.location {
+    order:1;
+    flex-grow: 1;
+    text-align: right;
+    padding-right: 1em;
+}
+
+.time {
+    order:0;
+    font-weight: bold;
+    padding-right: 2em;
+    flex-grow: 0;
+}
+
+.day {
+    box-shadow: 0 0 0.5em 0 #333;
+    display: flex;
+    flex-direction: column;
+}
+
+.day + .day {
+    margin-top: 2em;
+}
+
+
+/* "would be a nice idea to have a separator between weeks" - someone
+ * "hmm I wonder if i can make it with just CSS" - me
+ *
+ * What looks like a separator is actually:
+ * - some margin above the first element in the next week
+ * - the shadow of a 0-height box, pretending to be an element
+ * I mean, it works, right?
+ */
+
+.weekend + .day:not(.weekend) {
+    margin-top: 10rem;
+}
+
+.weekend + .day:not(.weekend)::before {
+    content: "";
+    box-shadow: 0 -5rem 0rem 2rem #333, 0 -5rem 0.5em 2rem #333;
+    width: calc(100% - 4rem);
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.weekend {
+    background: #555;
+}
+
+.day div, .day .date {
+    padding: 1rem;
+    background: #555;
+}
+
+.day div{
+    display: flex;
+    flex-wrap: wrap;
+}
+
+.today .date {
+    font-size: 2.5em;
+}
+
+.today .summary {
+}
+
+.summary, .break {
+    padding: 1rem;
+}
+
+.break {
+    width: auto;
+    line-height: 1em;
+}
+
+.break-long {
+    /* long breaks (over 15 minutes) */
+    line-height: 5em;
+}
+
+.flag {
+    /* important events (aka things we weren't able to parse so they're probably important) */
+    background: #774444 !important;
+    box-shadow: 0 0 0.5em 0 #333;
+}
+
+.today div, .today .date{
+    background: #777;
+}
+
+#scrollbutton {
+    /* make a nice calendar style button for going to the current day */
+    position: fixed;
+    bottom: 1rem;
+    left: 1rem;
+    font-size: 1.5rem;
+    font-weight: 1000;
+    background: #777;
+    box-shadow: 0 0 1rem #333, inset 0 0.5rem #888;
+    width: 3rem;
+    line-height: 2rem;
+    text-align: center;
+    border-radius: 0.3rem 0.3rem 0 0;
+    cursor: pointer;
+    height: 3rem;
+}
+
+#scrollbutton::before {
+    width: 50%;
+    border-right: 0.3rem solid #aaa;
+    border-left: 0.3rem solid #aaa;
+    content: "";
+    height: 0.5rem;
+    position: relative;
+    top: -2rem;
+    line-height: 0;
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+    top: -0.25rem;
+}
+
+#container {
+    padding-top: 4em;
+    padding-bottom: 4em;
+    width: calc(100% - 8em);
+    max-width: 50em;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+@media only screen and (max-width: 50em){
+    #container {
+        padding-top: 2em;
+        padding-bottom: 2em;
+        width: calc(100% - 2em);
+    }
+}

@@ -1,0 +1,5 @@
+app:
+  chdir: pysrc
+  http: localhost:9000
+  wsgi-file: passenger_wsgi.py
+  touch-reload: .
