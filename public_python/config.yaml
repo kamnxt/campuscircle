@@ -1,5 +1,0 @@
-app:
-  http: localhost:9000
-  wsgi-file: passenger_wsgi.py
-  check-static: public
-  static-index: index.html

@@ -1,6 +1,7 @@
 "Just some utilities"
 
-import datetime
+class ParseError(Exception):
+    "Raised when we fail to parse an event."
 
 
 class BetterClassEntry:
@@ -30,51 +31,22 @@ class BetterClassEntry:
         return f"ClassEntry({self.period})"
 
 
-def parse_classes_for_day(day, cell_html):
-    entries = [e.text for e in cell_html.find(".cal-content", first=True).find("span")]
+def get_last_part_of_string_filtered(string, predicate):
+    lastpart = ""
+    rev = reversed(string)
+    rest = ""
 
-    return [BetterClassEntry(day, entry) for entry in entries]
+    for i in rev:
+        if predicate(i):
+            lastpart += i
+        else:
+            rest = i
 
+            break
+    lastpart = "".join(reversed(lastpart))
+    rest = "".join(reversed(list(rev))) + rest
 
-def parse_full_calendar(calendar_html):
-    yearmonth = calendar_html.find("#header-title", first=True).text
-    calendar_cells = calendar_html.find("#schedule-calender", first=True).find("td")
-    classes = []
-
-    # So the calendar we get can have leading days (from the previous month)
-    month_offset = -1
-
-    for cell in calendar_cells:
-        date_elem = cell.find(".cal-head-number", first=True)
-
-        # If we no longer have cal-head-oth we're in the current month
-
-        if month_offset == -1 and "cal-head-oth" not in date_elem.attrs["class"]:
-            month_offset = 0
-        # and if it's back that means we are in the next month already!
-        elif month_offset == 0 and "cal-head-oth" in date_elem.attrs["class"]:
-            month_offset = 1
-        day = int(cell.find(".cal-head-number", first=True).text)
-        year, month = (int(x) for x in yearmonth.split("/"))
-        month += month_offset
-
-        # make sure months wrap around nicely
-
-        while month > 12:
-            month = month - 12
-            year += 1
-
-        while month < 1:
-            month += 12
-            year -= 1
-
-        date = datetime.datetime(year=year, month=month, day=day)
-
-        # finally parse the classes for that day
-        dayclasses = parse_classes_for_day(date, cell)
-        classes += dayclasses
-
-    return [c for c in classes if c.date.date() >= datetime.datetime.now().date()]
+    return (lastpart, rest)
 
 
 def pluralize(num, singular):
