@@ -16,7 +16,7 @@ class Schedule:
     def from_html(cls, calendar_html):
         "Creates a schedule from html"
         year_and_month = calendar_html.find("#header-title", first=True).text
-        year, base_month = (int(x) for x in year_and_month.split("/"))
+        base_year, base_month = (int(x) for x in year_and_month.split("/"))
         calendar_cells = calendar_html.find("#schedule-calender", first=True).find("td")
         days = []
 
@@ -35,6 +35,7 @@ class Schedule:
                 month_offset = 1
             day = int(cell.find(".cal-head-number", first=True).text)
             month = base_month + month_offset
+            year = base_year
 
             # make sure months wrap around nicely
 
