@@ -1,120 +1,113 @@
-* {
-    /* Reset margins and stuff */
+html {
+    scroll-behavior: smooth;
+    margin: 0;
+    color: #8e1a1d;
+    font-family: sans-serif;
+    font-weight: 800;
+    --color-white: #fff;
+    --color-darkred: #8e1a1d;
+    --color-darkyellow: #eacd38;
+    --color-flag: var(--color-darkyellow);
+    --color-calday: var(--color-darkred);
+    --color-caltoday: var(--color-darkyellow);
+    --color-calinactive: #aaa;
+    --color-event-defbg: var(--color-darkred);
+    /* background: #000; */
+}
+
+/* mini calendar */
+
+.cal-row {
+    display: flex;
+    margin: auto;
+    width: 100%;
+}
+.cal-cell {
+    flex-grow: 1;
+    flex-basis: 0;
+    text-align: center;
+    color: var(--color-calinactive);
+    padding-top: 0.5em;
+    line-height: 0.9em;
+}
+.cal-cell-day .daynumber {
+    padding: 0.1em;
+    width: 2em;
+    color: var(--color-calday);
+    border-radius: 1em;
+    display:block;
+    margin:auto;
+}
+.cal-cell-day .num-events {
+    font-size: 0.7rem;
+}
+.cal-cell-today .daynumber {
+    background: var(--color-caltoday); /* yellow */
+    color: #fff;
+}
+
+/* scrolly calendar */
+.day {
+    padding-top: 1rem;
+    display: flex;
+    flex-direction: column;
+    border-radius: 0.1em;
+}
+
+.day * {
+    padding-left: 1rem;
+    padding-right: 1rem;
+}
+
+.day span, .day div {
+    background: var(--color-event-defbg);
+    color: #fff;
+}
+
+.day span:nth-child(2), .day div:nth-child(2) {
+    border-radius: 1em 1em 0 0;
+}
+.day span:last-child, .day div:last-child {
+    border-radius: 0 0 1em 1em;
+}
+.day span:nth-child(2):last-child, .day div:nth-child(2):last-child {
+    border-radius: 1em 1em 1em 1em;
+}
+
+.flag, .flag span {
+    /* important events (aka things we weren't able to parse so they're probably important) */
+    background: var(--color-flag) !important;
+    color: #fff !important;
+    /* box-shadow: 0 0 0.5em 0 #333; */
+}
+
+
+body {
     margin: 0;
 }
 
-html {
-    font-family: sans-serif;
-    background: #4b4b4b;
-    color: #d9d9d9;
-    scroll-behavior: smooth;
-}
-
-div, p {
-    text-transform: lowercase;
-}
-
-.date {
-    font-size: 2em;
-    position: sticky; /* scrolling satisfaction *= 1000 */
-    top:0;
-    box-shadow: 0 0.2rem 0.1rem 0rem #4b4b4b; /* make the elements below fade a bit instead of hard clipping */
-}
-
-.day p {
-    flex-grow: 0;
-    order:0;
-}
-
-.location {
-    order:1;
-    flex-grow: 1;
-    text-align: right;
-    padding-right: 1em;
-}
-
-.time {
-    order:0;
-    font-weight: bold;
-    padding-right: 2em;
-    flex-grow: 0;
-}
-
-.day {
-    box-shadow: 0 0 0.5em 0 #333;
-    display: flex;
-    flex-direction: column;
-}
-
-.day + .day {
-    margin-top: 2em;
-}
-
-
-/* "would be a nice idea to have a separator between weeks" - someone
- * "hmm I wonder if i can make it with just CSS" - me
- *
- * What looks like a separator is actually:
- * - some margin above the first element in the next week
- * - the shadow of a 0-height box, pretending to be an element
- * I mean, it works, right?
- */
-
-.weekend + .day:not(.weekend) {
-    margin-top: 10rem;
-}
-
-.weekend + .day:not(.weekend)::before {
-    content: "";
-    box-shadow: 0 -5rem 0rem 2rem #333, 0 -5rem 0.5em 2rem #333;
-    width: calc(100% - 4rem);
+#container {
     margin-left: auto;
     margin-right: auto;
+    width: 100%;
+    height: 100vh;
 }
-
-.weekend {
-    background: #555;
-}
-
-.day div, .day .date {
-    padding: 1rem;
-    background: #555;
-}
-
-.day div{
+.split-container {
     display: flex;
-    flex-wrap: wrap;
+    flex-direction: column;
+    width: 100%;
+    height: 100%;
 }
-
-.today .date {
-    font-size: 2.5em;
+.split-container .cal-overview {
+    width: 100%;
+    flex-grow: 1;
+    max-width: 30rem;
+    background: var(--color-white);
 }
-
-.today .summary {
-}
-
-.summary, .break {
-    padding: 1rem;
-}
-
-.break {
-    width: auto;
-    line-height: 1em;
-}
-
-.break-long {
-    /* long breaks (over 15 minutes) */
-    line-height: 5em;
-}
-
-.flag {
-    /* important events (aka things we weren't able to parse so they're probably important) */
-    background: #774444 !important;
-    box-shadow: 0 0 0.5em 0 #333;
-}
-
-.today div, .today .date{
-    background: #777;
+.split-container .scroll-cal {
+    overflow-y: scroll;
+    scroll-behavior: smooth;
+    flex-grow: 1;
 }
 
 #scrollbutton {
@@ -124,8 +117,9 @@ div, p {
     left: 1rem;
     font-size: 1.5rem;
     font-weight: 1000;
-    background: #777;
-    box-shadow: 0 0 1rem #333, inset 0 0.5rem #888;
+    color: #eacd38;
+    background: #e82a51;
+    /* box-shadow: 0 0 1rem #333, inset 0 0.5rem #888; */
     width: 3rem;
     line-height: 2rem;
     text-align: center;
@@ -149,19 +143,21 @@ div, p {
     top: -0.25rem;
 }
 
-#container {
-    padding-top: 4em;
-    padding-bottom: 4em;
-    width: calc(100% - 8em);
-    max-width: 50em;
-    margin-left: auto;
-    margin-right: auto;
-}
 
-@media only screen and (max-width: 50em){
+@media only screen and (min-width: 40rem){
+
     #container {
-        padding-top: 2em;
-        padding-bottom: 2em;
-        width: calc(100% - 2em);
+        width: 100%;
+        max-width: none;
+    }
+    .split-container .cal-overview {
+        max-width: 20rem;
+    }
+    .scroll-cal {
+        padding-left: 2rem;
+    }
+    .split-container {
+        flex-direction: row;
+        justify-content: space-between;
     }
 }

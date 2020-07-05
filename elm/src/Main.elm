@@ -71,6 +71,7 @@ type Msg
     | Update
     | ScrollNoOp
     | Rescroll
+    | ScrollTo String
 
 
 type alias Event =
@@ -252,7 +253,6 @@ formatDate dt withWeekday =
            )
 
 
-
 renderDay : Maybe DateTime.DateTime -> DaySchedule -> Html Msg
 renderDay maybedatetime day =
     let
@@ -352,12 +352,91 @@ renderDay maybedatetime day =
                         ++ datestring
                         ++ "."
     in
-    div ([ class "day" ] ++ extraClasses)
+    div ([ Html.Attributes.id ("scrollcal-" ++ day.date), class "day" ] ++ extraClasses)
         ([ h3 [ class "date" ] [ text parsedDateStr ]
          , span [ class "summary" ] [ text summary ]
          ]
             ++ events
         )
+
+
+renderCalOverviewHeader weekdays =
+    let
+        makeItem item =
+            Html.span [ class "cal-cell" ] [ text item ]
+    in
+    [ Html.div [ class "cal-row" ] (List.map makeItem ([ " " ] ++ weekdays)) ]
+
+
+renderCalOverviewRows : Maybe DateTime.DateTime -> List DaySchedule -> List (Html Msg)
+renderCalOverviewRows maybeToday daysToRender =
+    let
+        makeItem day =
+            let
+                parsedDate =
+                    parseDate day.date
+
+                maybeNumEvents =
+                    case List.length day.events of
+                        0 ->
+                            []
+
+                        numEvents ->
+                            [ Html.span [ class "num-events" ] [ text (String.fromInt numEvents) ] ]
+
+                parsedDateStr =
+                    case parsedDate of
+                        Just datetime ->
+                            String.fromInt (Calendar.getDay datetime)
+
+                        Nothing ->
+                            ""
+
+                isToday =
+                    case maybeToday of
+                        Just today ->
+                            case parsedDate of
+                                Just eventdate ->
+                                    eventdate == DateTime.getDate today
+
+                                Nothing ->
+                                    False
+
+                        Nothing ->
+                            False
+
+                maybeTodayClass =
+                    if isToday then
+                        [ class "cal-cell-today", onClick (ScrollTo "today") ]
+
+                    else
+                        [ onClick (ScrollTo ("scrollcal-" ++ day.date)) ]
+            in
+            Html.span ([ class "cal-cell", class "cal-cell-day" ] ++ maybeTodayClass) ([ Html.span [ class "daynumber" ] [ text parsedDateStr ] ] ++ maybeNumEvents)
+
+        currentDays =
+            List.take 7 daysToRender
+
+        nextRow =
+            if List.length daysToRender > 7 then
+                renderCalOverviewRows maybeToday (List.drop 7 daysToRender)
+
+            else
+                []
+
+        weeknum =
+            Html.span [ class "cal-cell" ] [ text "-" ]
+    in
+    [ Html.div [ class "cal-row" ] ([ weeknum ] ++ List.map makeItem currentDays) ] ++ nextRow
+
+
+renderCalendarOverview : Maybe DateTime.DateTime -> List DaySchedule -> Html Msg
+renderCalendarOverview maybeToday days =
+    let
+        weekdays =
+            [ "s", "m", "t", "w", "t", "f", "s" ]
+    in
+    Html.div [ class "cal-overview" ] (renderCalOverviewHeader weekdays ++ renderCalOverviewRows maybeToday days)
 
 
 view : Model -> Html Msg
@@ -380,7 +459,15 @@ view model =
                 todaysDate =
                     String.fromInt (DateTime.getDay time)
             in
-            Html.div [] (List.map (renderDay (Just time)) days ++ [ Html.a [ onClick Rescroll, Html.Attributes.id "scrollbutton" ] [ text todaysDate ] ])
+            Html.div [ class "split-container" ] [ renderCalendarOverview (Just time) days, renderListCalendar time days ]
+
+
+renderListCalendar time days =
+    let
+        todaysDate =
+            String.fromInt (DateTime.getDay time)
+    in
+    Html.div [ Html.Attributes.id "scroll-cal", class "scroll-cal" ] (List.map (renderDay (Just time)) days ++ [ Html.a [ onClick Rescroll, Html.Attributes.id "scrollbutton" ] [ text todaysDate ] ])
 
 
 errorToString error =
@@ -399,8 +486,27 @@ refreshDateTask =
     Task.perform ReceiveDate (Task.map2 PosixZone Time.now Time.here)
 
 
-scrollTask =
-    Browser.Dom.getElement "today" |> Task.andThen (\today -> Browser.Dom.setViewport 0 (today.element.y - 20)) |> Task.attempt (\_ -> ScrollNoOp)
+scrollTask idToScrollTo =
+    let
+        --        setVp elemToScrollTo scrollelem scrollvp
+        tuplify a b c =
+            ( a.element.y, b.element.y, c.viewport.y )
+    in
+    Task.map3
+        tuplify
+        (Browser.Dom.getElement idToScrollTo)
+        (Browser.Dom.getElement "scroll-cal")
+        (Browser.Dom.getViewportOf "scroll-cal")
+        |> Task.andThen
+            (\items ->
+                let
+                    ( elemToScrollTo, scrollelem, scrollvp ) =
+                        items
+                in
+                Browser.Dom.setViewportOf "scroll-cal" 0 (elemToScrollTo + scrollvp - scrollelem + 2)
+             --            Browser.Dom.setViewportOf "scroll-cal" 0 (-scroll.element.y + today.element.y + 2)))
+            )
+        |> Task.attempt (\_ -> ScrollNoOp)
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -441,8 +547,11 @@ update msg model =
                     posix
                     zone
                 )
-            , scrollTask
+            , scrollTask "today"
             )
+
+        ScrollTo date ->
+            ( model, scrollTask date )
 
         Rescroll ->
             ( model, refreshDateTask )

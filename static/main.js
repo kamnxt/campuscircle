@@ -10982,18 +10982,54 @@ var $elm$core$Task$attempt = F2(
 						task))));
 	});
 var $elm$browser$Browser$Dom$getElement = _Browser_getElement;
-var $elm$browser$Browser$Dom$setViewport = _Browser_setViewport;
-var $author$project$Main$scrollTask = A2(
-	$elm$core$Task$attempt,
-	function (_v0) {
-		return $author$project$Main$ScrollNoOp;
-	},
-	A2(
-		$elm$core$Task$andThen,
-		function (today) {
-			return A2($elm$browser$Browser$Dom$setViewport, 0, today.element.y - 20);
+var $elm$browser$Browser$Dom$getViewportOf = _Browser_getViewportOf;
+var $elm$core$Task$map3 = F4(
+	function (func, taskA, taskB, taskC) {
+		return A2(
+			$elm$core$Task$andThen,
+			function (a) {
+				return A2(
+					$elm$core$Task$andThen,
+					function (b) {
+						return A2(
+							$elm$core$Task$andThen,
+							function (c) {
+								return $elm$core$Task$succeed(
+									A3(func, a, b, c));
+							},
+							taskC);
+					},
+					taskB);
+			},
+			taskA);
+	});
+var $elm$browser$Browser$Dom$setViewportOf = _Browser_setViewportOf;
+var $author$project$Main$scrollTask = function (idToScrollTo) {
+	var tuplify = F3(
+		function (a, b, c) {
+			return _Utils_Tuple3(a.element.y, b.element.y, c.viewport.y);
+		});
+	return A2(
+		$elm$core$Task$attempt,
+		function (_v1) {
+			return $author$project$Main$ScrollNoOp;
 		},
-		$elm$browser$Browser$Dom$getElement('today')));
+		A2(
+			$elm$core$Task$andThen,
+			function (items) {
+				var _v0 = items;
+				var elemToScrollTo = _v0.a;
+				var scrollelem = _v0.b;
+				var scrollvp = _v0.c;
+				return A3($elm$browser$Browser$Dom$setViewportOf, 'scroll-cal', 0, ((elemToScrollTo + scrollvp) - scrollelem) + 2);
+			},
+			A4(
+				$elm$core$Task$map3,
+				tuplify,
+				$elm$browser$Browser$Dom$getElement(idToScrollTo),
+				$elm$browser$Browser$Dom$getElement('scroll-cal'),
+				$elm$browser$Browser$Dom$getViewportOf('scroll-cal'))));
+};
 var $author$project$Main$update = F2(
 	function (msg, model) {
 		switch (msg.$) {
@@ -11035,7 +11071,12 @@ var $author$project$Main$update = F2(
 						$author$project$Main$EventModelWithDate,
 						days,
 						A2($author$project$Utils$localDateTime, posix, zone)),
-					$author$project$Main$scrollTask);
+					$author$project$Main$scrollTask('today'));
+			case 'ScrollTo':
+				var date = msg.a;
+				return _Utils_Tuple2(
+					model,
+					$author$project$Main$scrollTask(date));
 			case 'Rescroll':
 				return _Utils_Tuple2(model, $author$project$Main$refreshDateTask);
 			case 'Update':
@@ -11044,7 +11085,6 @@ var $author$project$Main$update = F2(
 				return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
 		}
 	});
-var $author$project$Main$Rescroll = {$: 'Rescroll'};
 var $PanagiotisGeorgiadis$elm_datetime$DateTime$Internal$getDate = function (_v0) {
 	var date = _v0.a.date;
 	return date;
@@ -11057,6 +11097,413 @@ var $PanagiotisGeorgiadis$elm_datetime$Calendar$getDay = A2($elm$core$Basics$com
 var $PanagiotisGeorgiadis$elm_datetime$DateTime$Internal$getDay = A2($elm$core$Basics$composeL, $PanagiotisGeorgiadis$elm_datetime$Calendar$getDay, $PanagiotisGeorgiadis$elm_datetime$DateTime$Internal$getDate);
 var $PanagiotisGeorgiadis$elm_datetime$DateTime$getDay = $PanagiotisGeorgiadis$elm_datetime$DateTime$Internal$getDay;
 var $elm$html$Html$h1 = _VirtualDom_node('h1');
+var $author$project$Main$renderCalOverviewHeader = function (weekdays) {
+	var makeItem = function (item) {
+		return A2(
+			$elm$html$Html$span,
+			_List_fromArray(
+				[
+					$elm$html$Html$Attributes$class('cal-cell')
+				]),
+			_List_fromArray(
+				[
+					$elm$html$Html$text(item)
+				]));
+	};
+	return _List_fromArray(
+		[
+			A2(
+			$elm$html$Html$div,
+			_List_fromArray(
+				[
+					$elm$html$Html$Attributes$class('cal-row')
+				]),
+			A2(
+				$elm$core$List$map,
+				makeItem,
+				_Utils_ap(
+					_List_fromArray(
+						[' ']),
+					weekdays)))
+		]);
+};
+var $author$project$Main$ScrollTo = function (a) {
+	return {$: 'ScrollTo', a: a};
+};
+var $PanagiotisGeorgiadis$elm_datetime$DateTime$getDate = $PanagiotisGeorgiadis$elm_datetime$DateTime$Internal$getDate;
+var $elm$core$Maybe$andThen = F2(
+	function (callback, maybeValue) {
+		if (maybeValue.$ === 'Just') {
+			var value = maybeValue.a;
+			return callback(value);
+		} else {
+			return $elm$core$Maybe$Nothing;
+		}
+	});
+var $PanagiotisGeorgiadis$elm_datetime$Calendar$Internal$dayFromInt = F3(
+	function (year, month, day) {
+		var maxValidDay = $PanagiotisGeorgiadis$elm_datetime$Calendar$Internal$dayToInt(
+			A2($PanagiotisGeorgiadis$elm_datetime$Calendar$Internal$lastDayOf, year, month));
+		return ((day > 0) && (!_Utils_eq(
+			A2($elm$core$Basics$compare, day, maxValidDay),
+			$elm$core$Basics$GT))) ? $elm$core$Maybe$Just(
+			$PanagiotisGeorgiadis$elm_datetime$Calendar$Internal$Day(day)) : $elm$core$Maybe$Nothing;
+	});
+var $PanagiotisGeorgiadis$elm_datetime$Calendar$Internal$compareDays = F2(
+	function (lhs, rhs) {
+		return A2(
+			$elm$core$Basics$compare,
+			$PanagiotisGeorgiadis$elm_datetime$Calendar$Internal$dayToInt(lhs),
+			$PanagiotisGeorgiadis$elm_datetime$Calendar$Internal$dayToInt(rhs));
+	});
+var $PanagiotisGeorgiadis$elm_datetime$Calendar$Internal$fromYearMonthDay = F3(
+	function (y, m, d) {
+		var maxDay = A2($PanagiotisGeorgiadis$elm_datetime$Calendar$Internal$lastDayOf, y, m);
+		var _v0 = A2($PanagiotisGeorgiadis$elm_datetime$Calendar$Internal$compareDays, d, maxDay);
+		if (_v0.$ === 'GT') {
+			return $elm$core$Maybe$Nothing;
+		} else {
+			return $elm$core$Maybe$Just(
+				$PanagiotisGeorgiadis$elm_datetime$Calendar$Internal$Date(
+					{day: d, month: m, year: y}));
+		}
+	});
+var $PanagiotisGeorgiadis$elm_datetime$Calendar$Internal$fromRawDay = F3(
+	function (year, month, day) {
+		return A2(
+			$elm$core$Maybe$andThen,
+			A2($PanagiotisGeorgiadis$elm_datetime$Calendar$Internal$fromYearMonthDay, year, month),
+			A3($PanagiotisGeorgiadis$elm_datetime$Calendar$Internal$dayFromInt, year, month, day));
+	});
+var $PanagiotisGeorgiadis$elm_datetime$Calendar$Internal$fromRawParts = function (_v0) {
+	var year = _v0.year;
+	var month = _v0.month;
+	var day = _v0.day;
+	return A2(
+		$elm$core$Maybe$andThen,
+		function (y) {
+			return A3($PanagiotisGeorgiadis$elm_datetime$Calendar$Internal$fromRawDay, y, month, day);
+		},
+		$PanagiotisGeorgiadis$elm_datetime$Calendar$Internal$yearFromInt(year));
+};
+var $PanagiotisGeorgiadis$elm_datetime$Calendar$fromRawParts = $PanagiotisGeorgiadis$elm_datetime$Calendar$Internal$fromRawParts;
+var $author$project$Utils$monthFromInt = function (maybeMonthNum) {
+	if (maybeMonthNum.$ === 'Nothing') {
+		return $elm$core$Maybe$Nothing;
+	} else {
+		var monthNum = maybeMonthNum.a;
+		switch (monthNum) {
+			case 1:
+				return $elm$core$Maybe$Just($elm$time$Time$Jan);
+			case 2:
+				return $elm$core$Maybe$Just($elm$time$Time$Feb);
+			case 3:
+				return $elm$core$Maybe$Just($elm$time$Time$Mar);
+			case 4:
+				return $elm$core$Maybe$Just($elm$time$Time$Apr);
+			case 5:
+				return $elm$core$Maybe$Just($elm$time$Time$May);
+			case 6:
+				return $elm$core$Maybe$Just($elm$time$Time$Jun);
+			case 7:
+				return $elm$core$Maybe$Just($elm$time$Time$Jul);
+			case 8:
+				return $elm$core$Maybe$Just($elm$time$Time$Aug);
+			case 9:
+				return $elm$core$Maybe$Just($elm$time$Time$Sep);
+			case 10:
+				return $elm$core$Maybe$Just($elm$time$Time$Oct);
+			case 11:
+				return $elm$core$Maybe$Just($elm$time$Time$Nov);
+			case 12:
+				return $elm$core$Maybe$Just($elm$time$Time$Dec);
+			default:
+				return $elm$core$Maybe$Nothing;
+		}
+	}
+};
+var $author$project$Utils$parseDate = function (date) {
+	var parts = A2($elm$core$String$split, '/', date);
+	if (((parts.b && parts.b.b) && parts.b.b.b) && (!parts.b.b.b.b)) {
+		var yearStr = parts.a;
+		var _v1 = parts.b;
+		var monthNumStr = _v1.a;
+		var _v2 = _v1.b;
+		var dayStr = _v2.a;
+		var maybeYear = $elm$core$String$toInt(yearStr);
+		var maybeMonth = $author$project$Utils$monthFromInt(
+			$elm$core$String$toInt(monthNumStr));
+		var maybeDay = $elm$core$String$toInt(dayStr);
+		var _v3 = _Utils_Tuple3(maybeYear, maybeMonth, maybeDay);
+		if (((_v3.a.$ === 'Just') && (_v3.b.$ === 'Just')) && (_v3.c.$ === 'Just')) {
+			var year = _v3.a.a;
+			var month = _v3.b.a;
+			var day = _v3.c.a;
+			return $PanagiotisGeorgiadis$elm_datetime$Calendar$fromRawParts(
+				{day: day, month: month, year: year});
+		} else {
+			return $elm$core$Maybe$Nothing;
+		}
+	} else {
+		return $elm$core$Maybe$Nothing;
+	}
+};
+var $elm$core$List$takeReverse = F3(
+	function (n, list, kept) {
+		takeReverse:
+		while (true) {
+			if (n <= 0) {
+				return kept;
+			} else {
+				if (!list.b) {
+					return kept;
+				} else {
+					var x = list.a;
+					var xs = list.b;
+					var $temp$n = n - 1,
+						$temp$list = xs,
+						$temp$kept = A2($elm$core$List$cons, x, kept);
+					n = $temp$n;
+					list = $temp$list;
+					kept = $temp$kept;
+					continue takeReverse;
+				}
+			}
+		}
+	});
+var $elm$core$List$takeTailRec = F2(
+	function (n, list) {
+		return $elm$core$List$reverse(
+			A3($elm$core$List$takeReverse, n, list, _List_Nil));
+	});
+var $elm$core$List$takeFast = F3(
+	function (ctr, n, list) {
+		if (n <= 0) {
+			return _List_Nil;
+		} else {
+			var _v0 = _Utils_Tuple2(n, list);
+			_v0$1:
+			while (true) {
+				_v0$5:
+				while (true) {
+					if (!_v0.b.b) {
+						return list;
+					} else {
+						if (_v0.b.b.b) {
+							switch (_v0.a) {
+								case 1:
+									break _v0$1;
+								case 2:
+									var _v2 = _v0.b;
+									var x = _v2.a;
+									var _v3 = _v2.b;
+									var y = _v3.a;
+									return _List_fromArray(
+										[x, y]);
+								case 3:
+									if (_v0.b.b.b.b) {
+										var _v4 = _v0.b;
+										var x = _v4.a;
+										var _v5 = _v4.b;
+										var y = _v5.a;
+										var _v6 = _v5.b;
+										var z = _v6.a;
+										return _List_fromArray(
+											[x, y, z]);
+									} else {
+										break _v0$5;
+									}
+								default:
+									if (_v0.b.b.b.b && _v0.b.b.b.b.b) {
+										var _v7 = _v0.b;
+										var x = _v7.a;
+										var _v8 = _v7.b;
+										var y = _v8.a;
+										var _v9 = _v8.b;
+										var z = _v9.a;
+										var _v10 = _v9.b;
+										var w = _v10.a;
+										var tl = _v10.b;
+										return (ctr > 1000) ? A2(
+											$elm$core$List$cons,
+											x,
+											A2(
+												$elm$core$List$cons,
+												y,
+												A2(
+													$elm$core$List$cons,
+													z,
+													A2(
+														$elm$core$List$cons,
+														w,
+														A2($elm$core$List$takeTailRec, n - 4, tl))))) : A2(
+											$elm$core$List$cons,
+											x,
+											A2(
+												$elm$core$List$cons,
+												y,
+												A2(
+													$elm$core$List$cons,
+													z,
+													A2(
+														$elm$core$List$cons,
+														w,
+														A3($elm$core$List$takeFast, ctr + 1, n - 4, tl)))));
+									} else {
+										break _v0$5;
+									}
+							}
+						} else {
+							if (_v0.a === 1) {
+								break _v0$1;
+							} else {
+								break _v0$5;
+							}
+						}
+					}
+				}
+				return list;
+			}
+			var _v1 = _v0.b;
+			var x = _v1.a;
+			return _List_fromArray(
+				[x]);
+		}
+	});
+var $elm$core$List$take = F2(
+	function (n, list) {
+		return A3($elm$core$List$takeFast, 0, n, list);
+	});
+var $author$project$Main$renderCalOverviewRows = F2(
+	function (maybeToday, daysToRender) {
+		var weeknum = A2(
+			$elm$html$Html$span,
+			_List_fromArray(
+				[
+					$elm$html$Html$Attributes$class('cal-cell')
+				]),
+			_List_fromArray(
+				[
+					$elm$html$Html$text('-')
+				]));
+		var nextRow = ($elm$core$List$length(daysToRender) > 7) ? A2(
+			$author$project$Main$renderCalOverviewRows,
+			maybeToday,
+			A2($elm$core$List$drop, 7, daysToRender)) : _List_Nil;
+		var makeItem = function (day) {
+			var parsedDate = $author$project$Utils$parseDate(day.date);
+			var parsedDateStr = function () {
+				if (parsedDate.$ === 'Just') {
+					var datetime = parsedDate.a;
+					return $elm$core$String$fromInt(
+						$PanagiotisGeorgiadis$elm_datetime$Calendar$getDay(datetime));
+				} else {
+					return '';
+				}
+			}();
+			var maybeNumEvents = function () {
+				var _v2 = $elm$core$List$length(day.events);
+				if (!_v2) {
+					return _List_Nil;
+				} else {
+					var numEvents = _v2;
+					return _List_fromArray(
+						[
+							A2(
+							$elm$html$Html$span,
+							_List_fromArray(
+								[
+									$elm$html$Html$Attributes$class('num-events')
+								]),
+							_List_fromArray(
+								[
+									$elm$html$Html$text(
+									$elm$core$String$fromInt(numEvents))
+								]))
+						]);
+				}
+			}();
+			var isToday = function () {
+				if (maybeToday.$ === 'Just') {
+					var today = maybeToday.a;
+					if (parsedDate.$ === 'Just') {
+						var eventdate = parsedDate.a;
+						return _Utils_eq(
+							eventdate,
+							$PanagiotisGeorgiadis$elm_datetime$DateTime$getDate(today));
+					} else {
+						return false;
+					}
+				} else {
+					return false;
+				}
+			}();
+			var maybeTodayClass = isToday ? _List_fromArray(
+				[
+					$elm$html$Html$Attributes$class('cal-cell-today'),
+					$elm$html$Html$Events$onClick(
+					$author$project$Main$ScrollTo('today'))
+				]) : _List_fromArray(
+				[
+					$elm$html$Html$Events$onClick(
+					$author$project$Main$ScrollTo('scrollcal-' + day.date))
+				]);
+			return A2(
+				$elm$html$Html$span,
+				_Utils_ap(
+					_List_fromArray(
+						[
+							$elm$html$Html$Attributes$class('cal-cell'),
+							$elm$html$Html$Attributes$class('cal-cell-day')
+						]),
+					maybeTodayClass),
+				_Utils_ap(
+					_List_fromArray(
+						[
+							A2(
+							$elm$html$Html$span,
+							_List_fromArray(
+								[
+									$elm$html$Html$Attributes$class('daynumber')
+								]),
+							_List_fromArray(
+								[
+									$elm$html$Html$text(parsedDateStr)
+								]))
+						]),
+					maybeNumEvents));
+		};
+		var currentDays = A2($elm$core$List$take, 7, daysToRender);
+		return _Utils_ap(
+			_List_fromArray(
+				[
+					A2(
+					$elm$html$Html$div,
+					_List_fromArray(
+						[
+							$elm$html$Html$Attributes$class('cal-row')
+						]),
+					_Utils_ap(
+						_List_fromArray(
+							[weeknum]),
+						A2($elm$core$List$map, makeItem, currentDays)))
+				]),
+			nextRow);
+	});
+var $author$project$Main$renderCalendarOverview = F2(
+	function (maybeToday, days) {
+		var weekdays = _List_fromArray(
+			['s', 'm', 't', 'w', 't', 'f', 's']);
+		return A2(
+			$elm$html$Html$div,
+			_List_fromArray(
+				[
+					$elm$html$Html$Attributes$class('cal-overview')
+				]),
+			_Utils_ap(
+				$author$project$Main$renderCalOverviewHeader(weekdays),
+				A2($author$project$Main$renderCalOverviewRows, maybeToday, days)));
+	});
 var $PanagiotisGeorgiadis$elm_datetime$Calendar$Internal$getMonth = function (_v0) {
 	var month = _v0.a.month;
 	return month;
@@ -11188,125 +11635,7 @@ var $author$project$Main$formatDate = F2(
 			}
 		}()))));
 	});
-var $PanagiotisGeorgiadis$elm_datetime$DateTime$getDate = $PanagiotisGeorgiadis$elm_datetime$DateTime$Internal$getDate;
 var $elm$html$Html$h3 = _VirtualDom_node('h3');
-var $elm$core$Maybe$andThen = F2(
-	function (callback, maybeValue) {
-		if (maybeValue.$ === 'Just') {
-			var value = maybeValue.a;
-			return callback(value);
-		} else {
-			return $elm$core$Maybe$Nothing;
-		}
-	});
-var $PanagiotisGeorgiadis$elm_datetime$Calendar$Internal$dayFromInt = F3(
-	function (year, month, day) {
-		var maxValidDay = $PanagiotisGeorgiadis$elm_datetime$Calendar$Internal$dayToInt(
-			A2($PanagiotisGeorgiadis$elm_datetime$Calendar$Internal$lastDayOf, year, month));
-		return ((day > 0) && (!_Utils_eq(
-			A2($elm$core$Basics$compare, day, maxValidDay),
-			$elm$core$Basics$GT))) ? $elm$core$Maybe$Just(
-			$PanagiotisGeorgiadis$elm_datetime$Calendar$Internal$Day(day)) : $elm$core$Maybe$Nothing;
-	});
-var $PanagiotisGeorgiadis$elm_datetime$Calendar$Internal$compareDays = F2(
-	function (lhs, rhs) {
-		return A2(
-			$elm$core$Basics$compare,
-			$PanagiotisGeorgiadis$elm_datetime$Calendar$Internal$dayToInt(lhs),
-			$PanagiotisGeorgiadis$elm_datetime$Calendar$Internal$dayToInt(rhs));
-	});
-var $PanagiotisGeorgiadis$elm_datetime$Calendar$Internal$fromYearMonthDay = F3(
-	function (y, m, d) {
-		var maxDay = A2($PanagiotisGeorgiadis$elm_datetime$Calendar$Internal$lastDayOf, y, m);
-		var _v0 = A2($PanagiotisGeorgiadis$elm_datetime$Calendar$Internal$compareDays, d, maxDay);
-		if (_v0.$ === 'GT') {
-			return $elm$core$Maybe$Nothing;
-		} else {
-			return $elm$core$Maybe$Just(
-				$PanagiotisGeorgiadis$elm_datetime$Calendar$Internal$Date(
-					{day: d, month: m, year: y}));
-		}
-	});
-var $PanagiotisGeorgiadis$elm_datetime$Calendar$Internal$fromRawDay = F3(
-	function (year, month, day) {
-		return A2(
-			$elm$core$Maybe$andThen,
-			A2($PanagiotisGeorgiadis$elm_datetime$Calendar$Internal$fromYearMonthDay, year, month),
-			A3($PanagiotisGeorgiadis$elm_datetime$Calendar$Internal$dayFromInt, year, month, day));
-	});
-var $PanagiotisGeorgiadis$elm_datetime$Calendar$Internal$fromRawParts = function (_v0) {
-	var year = _v0.year;
-	var month = _v0.month;
-	var day = _v0.day;
-	return A2(
-		$elm$core$Maybe$andThen,
-		function (y) {
-			return A3($PanagiotisGeorgiadis$elm_datetime$Calendar$Internal$fromRawDay, y, month, day);
-		},
-		$PanagiotisGeorgiadis$elm_datetime$Calendar$Internal$yearFromInt(year));
-};
-var $PanagiotisGeorgiadis$elm_datetime$Calendar$fromRawParts = $PanagiotisGeorgiadis$elm_datetime$Calendar$Internal$fromRawParts;
-var $author$project$Utils$monthFromInt = function (maybeMonthNum) {
-	if (maybeMonthNum.$ === 'Nothing') {
-		return $elm$core$Maybe$Nothing;
-	} else {
-		var monthNum = maybeMonthNum.a;
-		switch (monthNum) {
-			case 1:
-				return $elm$core$Maybe$Just($elm$time$Time$Jan);
-			case 2:
-				return $elm$core$Maybe$Just($elm$time$Time$Feb);
-			case 3:
-				return $elm$core$Maybe$Just($elm$time$Time$Mar);
-			case 4:
-				return $elm$core$Maybe$Just($elm$time$Time$Apr);
-			case 5:
-				return $elm$core$Maybe$Just($elm$time$Time$May);
-			case 6:
-				return $elm$core$Maybe$Just($elm$time$Time$Jun);
-			case 7:
-				return $elm$core$Maybe$Just($elm$time$Time$Jul);
-			case 8:
-				return $elm$core$Maybe$Just($elm$time$Time$Aug);
-			case 9:
-				return $elm$core$Maybe$Just($elm$time$Time$Sep);
-			case 10:
-				return $elm$core$Maybe$Just($elm$time$Time$Oct);
-			case 11:
-				return $elm$core$Maybe$Just($elm$time$Time$Nov);
-			case 12:
-				return $elm$core$Maybe$Just($elm$time$Time$Dec);
-			default:
-				return $elm$core$Maybe$Nothing;
-		}
-	}
-};
-var $author$project$Utils$parseDate = function (date) {
-	var parts = A2($elm$core$String$split, '/', date);
-	if (((parts.b && parts.b.b) && parts.b.b.b) && (!parts.b.b.b.b)) {
-		var yearStr = parts.a;
-		var _v1 = parts.b;
-		var monthNumStr = _v1.a;
-		var _v2 = _v1.b;
-		var dayStr = _v2.a;
-		var maybeYear = $elm$core$String$toInt(yearStr);
-		var maybeMonth = $author$project$Utils$monthFromInt(
-			$elm$core$String$toInt(monthNumStr));
-		var maybeDay = $elm$core$String$toInt(dayStr);
-		var _v3 = _Utils_Tuple3(maybeYear, maybeMonth, maybeDay);
-		if (((_v3.a.$ === 'Just') && (_v3.b.$ === 'Just')) && (_v3.c.$ === 'Just')) {
-			var year = _v3.a.a;
-			var month = _v3.b.a;
-			var day = _v3.c.a;
-			return $PanagiotisGeorgiadis$elm_datetime$Calendar$fromRawParts(
-				{day: day, month: month, year: year});
-		} else {
-			return $elm$core$Maybe$Nothing;
-		}
-	} else {
-		return $elm$core$Maybe$Nothing;
-	}
-};
 var $elm$parser$Parser$Advanced$Parser = function (a) {
 	return {$: 'Parser', a: a};
 };
@@ -11841,6 +12170,7 @@ var $author$project$Main$renderDay = F2(
 			_Utils_ap(
 				_List_fromArray(
 					[
+						$elm$html$Html$Attributes$id('scrollcal-' + day.date),
 						$elm$html$Html$Attributes$class('day')
 					]),
 				extraClasses),
@@ -11869,6 +12199,39 @@ var $author$project$Main$renderDay = F2(
 							]))
 					]),
 				events));
+	});
+var $author$project$Main$Rescroll = {$: 'Rescroll'};
+var $author$project$Main$renderListCalendar = F2(
+	function (time, days) {
+		var todaysDate = $elm$core$String$fromInt(
+			$PanagiotisGeorgiadis$elm_datetime$DateTime$getDay(time));
+		return A2(
+			$elm$html$Html$div,
+			_List_fromArray(
+				[
+					$elm$html$Html$Attributes$id('scroll-cal'),
+					$elm$html$Html$Attributes$class('scroll-cal')
+				]),
+			_Utils_ap(
+				A2(
+					$elm$core$List$map,
+					$author$project$Main$renderDay(
+						$elm$core$Maybe$Just(time)),
+					days),
+				_List_fromArray(
+					[
+						A2(
+						$elm$html$Html$a,
+						_List_fromArray(
+							[
+								$elm$html$Html$Events$onClick($author$project$Main$Rescroll),
+								$elm$html$Html$Attributes$id('scrollbutton')
+							]),
+						_List_fromArray(
+							[
+								$elm$html$Html$text(todaysDate)
+							]))
+					])));
 	});
 var $author$project$Main$view = function (model) {
 	switch (model.$) {
@@ -11918,30 +12281,21 @@ var $author$project$Main$view = function (model) {
 				$PanagiotisGeorgiadis$elm_datetime$DateTime$getDay(time));
 			return A2(
 				$elm$html$Html$div,
-				_List_Nil,
-				_Utils_ap(
-					A2(
-						$elm$core$List$map,
-						$author$project$Main$renderDay(
-							$elm$core$Maybe$Just(time)),
+				_List_fromArray(
+					[
+						$elm$html$Html$Attributes$class('split-container')
+					]),
+				_List_fromArray(
+					[
+						A2(
+						$author$project$Main$renderCalendarOverview,
+						$elm$core$Maybe$Just(time),
 						days),
-					_List_fromArray(
-						[
-							A2(
-							$elm$html$Html$a,
-							_List_fromArray(
-								[
-									$elm$html$Html$Events$onClick($author$project$Main$Rescroll),
-									$elm$html$Html$Attributes$id('scrollbutton')
-								]),
-							_List_fromArray(
-								[
-									$elm$html$Html$text(todaysDate)
-								]))
-						])));
+						A2($author$project$Main$renderListCalendar, time, days)
+					]));
 	}
 };
 var $author$project$Main$main = $elm$browser$Browser$element(
 	{init: $author$project$Main$init, subscriptions: $author$project$Main$subscriptions, update: $author$project$Main$update, view: $author$project$Main$view});
 _Platform_export({'Main':{'init':$author$project$Main$main(
-	$elm$json$Json$Decode$succeed(_Utils_Tuple0))({"versions":{"elm":"0.19.1"},"types":{"message":"Main.Msg","aliases":{"Main.DaySchedule":{"args":[],"type":"{ date : String.String, events : List.List Main.Event }"},"Main.Event":{"args":[],"type":"{ info : String.String, from_time : String.String, to_time : String.String, flag : Basics.Bool, location : String.String }"},"Utils.PosixZone":{"args":[],"type":"{ posix : Time.Posix, zone : Time.Zone }"},"Time.Era":{"args":[],"type":"{ start : Basics.Int, offset : Basics.Int }"}},"unions":{"Main.Msg":{"args":[],"tags":{"GotEvents":["Result.Result Http.Error (List.List Main.DaySchedule)"],"ReceiveDate":["Utils.PosixZone"],"Update":[],"ScrollNoOp":[],"Rescroll":[]}},"Basics.Bool":{"args":[],"tags":{"True":[],"False":[]}},"Http.Error":{"args":[],"tags":{"BadUrl":["String.String"],"Timeout":[],"NetworkError":[],"BadStatus":["Basics.Int"],"BadBody":["String.String"]}},"List.List":{"args":["a"],"tags":{}},"Time.Posix":{"args":[],"tags":{"Posix":["Basics.Int"]}},"Result.Result":{"args":["error","value"],"tags":{"Ok":["value"],"Err":["error"]}},"String.String":{"args":[],"tags":{"String":[]}},"Time.Zone":{"args":[],"tags":{"Zone":["Basics.Int","List.List Time.Era"]}},"Basics.Int":{"args":[],"tags":{"Int":[]}}}}})}});}(this));
+	$elm$json$Json$Decode$succeed(_Utils_Tuple0))({"versions":{"elm":"0.19.1"},"types":{"message":"Main.Msg","aliases":{"Main.DaySchedule":{"args":[],"type":"{ date : String.String, events : List.List Main.Event }"},"Main.Event":{"args":[],"type":"{ info : String.String, from_time : String.String, to_time : String.String, flag : Basics.Bool, location : String.String }"},"Utils.PosixZone":{"args":[],"type":"{ posix : Time.Posix, zone : Time.Zone }"},"Time.Era":{"args":[],"type":"{ start : Basics.Int, offset : Basics.Int }"}},"unions":{"Main.Msg":{"args":[],"tags":{"GotEvents":["Result.Result Http.Error (List.List Main.DaySchedule)"],"ReceiveDate":["Utils.PosixZone"],"Update":[],"ScrollNoOp":[],"Rescroll":[],"ScrollTo":["String.String"]}},"Basics.Bool":{"args":[],"tags":{"True":[],"False":[]}},"Http.Error":{"args":[],"tags":{"BadUrl":["String.String"],"Timeout":[],"NetworkError":[],"BadStatus":["Basics.Int"],"BadBody":["String.String"]}},"List.List":{"args":["a"],"tags":{}},"Time.Posix":{"args":[],"tags":{"Posix":["Basics.Int"]}},"Result.Result":{"args":["error","value"],"tags":{"Ok":["value"],"Err":["error"]}},"String.String":{"args":[],"tags":{"String":[]}},"Time.Zone":{"args":[],"tags":{"Zone":["Basics.Int","List.List Time.Era"]}},"Basics.Int":{"args":[],"tags":{"Int":[]}}}}})}});}(this));
