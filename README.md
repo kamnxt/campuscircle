@@ -4,6 +4,8 @@
 
 This is a simple client for getting the calendar from the _NS Solutions CampusSquare_ portal (aka _Loyola_ at Sophia University, _TWINS_ at Tsukuba University...) and outputting them in a nicer and more modern format.
 
+Note: I have stopped developing this as I no longer need this or have a way to test this, since I have finished my exchange semester at a university using this.
+
 ## Why?
 
 I got tired of having to log in _every single time_ I wanted to check my schedule. Also, CampusSquare is kind of slow, so loading it, logging in and then finding my schedule would take a moment.
