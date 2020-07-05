@@ -26,6 +26,8 @@ uwsgi --yaml config.yaml:app
 ```
 I recommend setting up a virtualenv for this.
 
+As the frontend is written in Elm, you may wanna use elm-live if you want to work on this.
+
 ## Other stuff
 
 I have absolutely no connection to NS Solutions or CampusSquare, other than having to use it at my university.
